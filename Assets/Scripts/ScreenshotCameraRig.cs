@@ -15,6 +15,11 @@ namespace JARcraft.UnityEditor.ScreenshotTool
         [Serializable]
         public class FrameSettings
         {
+            [Header("Camera")]
+            [Range(1, 179)]
+            public float fov = 45;
+
+            [Header("Rotation")]
             [Range(-180, 180)]
             public float pitch = 0;
 
@@ -24,11 +29,15 @@ namespace JARcraft.UnityEditor.ScreenshotTool
             [Range(-180, 180)]
             public float roll = 0;
 
+            [Header("Fine Control")]
+            [Range(-1, 1)]
+            public float xOffset = 0;
+
+            [Range(-1, 1)]
+            public float yOffset = 0;
+
             [Min(1)]
             public float zDistance = 20;
-
-            [Range(1, 179)]
-            public float fov = 45;
 
             public void Apply(Camera camera, Transform origin)
             {
@@ -41,14 +50,19 @@ namespace JARcraft.UnityEditor.ScreenshotTool
                 camera.transform.Rotate(new Vector3(0, 0, roll));
                 camera.transform.localPosition = origin.position + -(direction * zDistance);
 
+                camera.transform.localPosition += (camera.transform.right * xOffset + new Vector3(0, yOffset)) * zDistance;
+                
                 camera.fieldOfView = fov;
             }
 
             public FrameSettings CopyFrom(FrameSettings target)
             {
+                fov = target.fov;
                 pitch = target.pitch;
                 yaw = target.yaw;
                 pitch = target.roll;
+                xOffset = target.xOffset;
+                yOffset = target.yOffset;
                 zDistance = target.zDistance;
 
                 return this;
@@ -56,11 +70,13 @@ namespace JARcraft.UnityEditor.ScreenshotTool
 
             public void LerpTo(FrameSettings target, float timeStep)
             {
+                fov = Mathf.Lerp(fov, target.fov, timeStep);
                 pitch = Mathf.Lerp(pitch, target.pitch, timeStep);
                 yaw = Mathf.Lerp(yaw, target.yaw, timeStep);
                 roll = Mathf.Lerp(roll, target.roll, timeStep);
                 zDistance = Mathf.Lerp(zDistance, target.zDistance, timeStep);
-                fov = Mathf.Lerp(fov, target.fov, timeStep);
+                xOffset = Mathf.Lerp(xOffset, target.xOffset, timeStep);
+                yOffset = Mathf.Lerp(yOffset, target.yOffset, timeStep);
             }
         }
 
@@ -103,10 +119,10 @@ namespace JARcraft.UnityEditor.ScreenshotTool
         }
 
 #if UNITY_EDITOR
-        public Camera screenshotCamera;
+        public Camera cam;
 
-        public FrameSettings frame;
-        public SceneSettings scene;
+        public FrameSettings frameSettings;
+        public SceneSettings sceneSettings;
 
         EditorCoroutine updateRigRoutine;
 
@@ -129,17 +145,17 @@ namespace JARcraft.UnityEditor.ScreenshotTool
 
         IEnumerator UpdateRig()
         {
-            FrameSettings interpolatedFrame = new FrameSettings().CopyFrom(frame);
+            FrameSettings interpolatedFrame = new FrameSettings().CopyFrom(frameSettings);
             float timestamp = Time.realtimeSinceStartup;
 
             while (true)
             {
                 float deltaTime = Mathf.Max(Time.realtimeSinceStartup - timestamp, 0.001f);
 
-                if (screenshotCamera)
+                if (cam)
                 {
-                    interpolatedFrame.LerpTo(frame, deltaTime * 20f);
-                    interpolatedFrame.Apply(screenshotCamera, transform);
+                    interpolatedFrame.LerpTo(frameSettings, deltaTime * 20f);
+                    interpolatedFrame.Apply(cam, transform);
                 }
 
                 timestamp = Time.realtimeSinceStartup;
@@ -197,13 +213,13 @@ namespace JARcraft.UnityEditor.ScreenshotTool
 
         void OnValidate()
         {
-            if (!screenshotCamera)
+            if (!cam)
             {
                 Debug.LogWarning("No camera assigned!");
                 return;
             }
 
-            scene.Apply(screenshotCamera);
+            sceneSettings.Apply(cam);
         }
 #endif
     }

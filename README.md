@@ -1,6 +1,8 @@
 # Screenshot Tool
 A Unity tool to help create icons and screenshots.
 
+![](https://github.com/JARcraft2/screenshot-tool/blob/main/gui_preview.gif)
+
 ## How to use
 - Drag the project folder into your Unity assets and open up the 'Screenshot' scene.
 - A camera rig object and demo scene has already been set up.
