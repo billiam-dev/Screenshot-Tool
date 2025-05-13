@@ -1,16 +1,16 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace JARcraft.UnityEditor.ScreenshotTool
+namespace Billiam.UEdit.ScreenshotTool
 {
     [CustomEditor(typeof(ScreenshotCameraRig))]
     public class ScreenshotCameraRigEditor : Editor
     {
-        ScreenshotCameraRig cameraRig;
+        private ScreenshotCameraRig cameraRig;
 
-        SerializedProperty cameraProperty;
-        SerializedProperty frameSettingsProperty;
-        SerializedProperty sceneSettingsProperty;
+        private SerializedProperty cameraProperty;
+        private SerializedProperty frameSettingsProperty;
+        private SerializedProperty sceneSettingsProperty;
 
         void OnEnable()
         {

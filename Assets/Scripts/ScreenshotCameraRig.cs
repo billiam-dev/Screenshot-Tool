@@ -7,7 +7,7 @@ using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace JARcraft.UnityEditor.ScreenshotTool
+namespace Billiam.UEdit.ScreenshotTool
 {
     [ExecuteInEditMode]
     public class ScreenshotCameraRig : MonoBehaviour
@@ -36,8 +36,8 @@ namespace JARcraft.UnityEditor.ScreenshotTool
             [Range(-1, 1)]
             public float yOffset = 0;
 
-            [Min(1)]
-            public float zDistance = 20;
+            [Min(0)]
+            public float zOffset = 20;
 
             public void Apply(Camera camera, Transform origin)
             {
@@ -48,9 +48,9 @@ namespace JARcraft.UnityEditor.ScreenshotTool
                 Vector3 direction = new Vector3(x, y, z).normalized;
                 camera.transform.forward = direction;
                 camera.transform.Rotate(new Vector3(0, 0, roll));
-                camera.transform.localPosition = origin.position + -(direction * zDistance);
+                camera.transform.localPosition = origin.position + -(direction * zOffset);
 
-                camera.transform.localPosition += (camera.transform.right * xOffset + new Vector3(0, yOffset)) * zDistance;
+                camera.transform.localPosition += (camera.transform.right * xOffset + new Vector3(0, yOffset)) * zOffset;
                 
                 camera.fieldOfView = fov;
             }
@@ -63,7 +63,7 @@ namespace JARcraft.UnityEditor.ScreenshotTool
                 pitch = target.roll;
                 xOffset = target.xOffset;
                 yOffset = target.yOffset;
-                zDistance = target.zDistance;
+                zOffset = target.zOffset;
 
                 return this;
             }
@@ -74,7 +74,7 @@ namespace JARcraft.UnityEditor.ScreenshotTool
                 pitch = Mathf.Lerp(pitch, target.pitch, timeStep);
                 yaw = Mathf.Lerp(yaw, target.yaw, timeStep);
                 roll = Mathf.Lerp(roll, target.roll, timeStep);
-                zDistance = Mathf.Lerp(zDistance, target.zDistance, timeStep);
+                zOffset = Mathf.Lerp(zOffset, target.zOffset, timeStep);
                 xOffset = Mathf.Lerp(xOffset, target.xOffset, timeStep);
                 yOffset = Mathf.Lerp(yOffset, target.yOffset, timeStep);
             }
@@ -120,7 +120,6 @@ namespace JARcraft.UnityEditor.ScreenshotTool
 
 #if UNITY_EDITOR
         public Camera cam;
-
         public FrameSettings frameSettings;
         public SceneSettings sceneSettings;
 
@@ -173,8 +172,6 @@ namespace JARcraft.UnityEditor.ScreenshotTool
             // We should only read the screen buffer after rendering is complete
             yield return new WaitForEndOfFrame();
 
-            string fileName = "New Screenshot";
-
             // Create screenshots folder
             string parentFolder = "Screenshots";
             if (!AssetDatabase.IsValidFolder(string.Format("Assets/{0}", parentFolder)))
@@ -183,19 +180,20 @@ namespace JARcraft.UnityEditor.ScreenshotTool
             }
 
             // Get unique path
+            string fileName = "New Screenshot";
             string path = AssetDatabase.GenerateUniqueAssetPath(string.Format("Assets/{0}/{1}.png", parentFolder, fileName));
 
             int width = Screen.width;
             int height = Screen.height;
 
             // Read screen to texture
-            Texture2D screenCapture = new Texture2D(width, height);
-            screenCapture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-            screenCapture.Apply();
+            Texture2D screenTex = new Texture2D(width, height);
+            screenTex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            screenTex.Apply();
 
             // Encode texture to bytes
-            byte[] bytes = screenCapture.EncodeToPNG();
-            DestroyImmediate(screenCapture);
+            byte[] bytes = screenTex.EncodeToPNG();
+            DestroyImmediate(screenTex);
 
             // Write bytes to disc
             File.WriteAllBytes(path, bytes);
